@@ -31,10 +31,10 @@ void set_error(char* message) {
 
 int GuiTextBox2(Rectangle bounds, char *text, int bufferSize, bool editMode) {
 	#if !defined(RAYGUI_TEXTBOX_AUTO_CURSOR_COOLDOWN)
-	    #define RAYGUI_TEXTBOX_AUTO_CURSOR_COOLDOWN  40        // Frames to wait for autocursor movement
+		#define RAYGUI_TEXTBOX_AUTO_CURSOR_COOLDOWN  40        // Frames to wait for autocursor movement
 	#endif
 	#if !defined(RAYGUI_TEXTBOX_AUTO_CURSOR_DELAY)
-	    #define RAYGUI_TEXTBOX_AUTO_CURSOR_DELAY      1        // Frames delay for autocursor movement
+		#define RAYGUI_TEXTBOX_AUTO_CURSOR_DELAY      1        // Frames delay for autocursor movement
 	#endif
 	
 	int result = 0;
@@ -409,13 +409,8 @@ bool set_new_alarm_path(const char* settings_file_path, const char* file_path) {
 
 
 char* get_alarm_path_from_settings(const char* settings_file_path, size_t* path_size) {
-	struct stat st;
-	long size;
-	if (stat(settings_file_path, &st) == 0) {
-		size = st.st_size;
-	}
-	char* contents = malloc(size+1);
-
+	size_t size = 0;
+	char* contents = malloc(size);
 
 	FILE *fptr = fopen(settings_file_path, "r");
 
@@ -424,16 +419,14 @@ char* get_alarm_path_from_settings(const char* settings_file_path, size_t* path_
 	}
 
 	char ch;
-	int count = 0;
-
 	do { 
+		contents = realloc(contents, ++size);
 		ch = fgetc(fptr);
 		if (ch == '\n') break;
-		contents[count] = ch;
-		count++;
+		contents[size-1] = ch;
 	} while (ch != EOF);
-	contents[count-1] = '\0';
-	*path_size = count;
+	contents[size-1] = '\0';
+	*path_size = size;
 
 	fclose(fptr);
 	return contents;
@@ -441,13 +434,7 @@ char* get_alarm_path_from_settings(const char* settings_file_path, size_t* path_
 
 
 int main() {
-	InitWindow(WIDTH, HEIGHT, "Glock");
-	InitAudioDevice();
-	SetTargetFPS(60);
-
 	const int height_offset = 250;
-
-	GuiWindowFileDialogState file_dialog_state = InitGuiWindowFileDialog(GetWorkingDirectory());
 
 	Rectangle hours_box_bounds = {
 		WIDTH/2.0-35/2.0,
@@ -474,7 +461,6 @@ int main() {
 		25,
 	};
 
-	// 1 2 3 5 10 15 30 60
 	Rectangle one_minute_button_bounds = {
 		220,
 		50,
@@ -499,7 +485,7 @@ int main() {
 		80,
 		25
 	};
-	// 1 2 3 5 10 15 30 60
+
 	Rectangle ten_minute_button_bounds = {
 		220,
 		85,
@@ -553,10 +539,6 @@ int main() {
 	bool seconds_box_edit_mode = false;
 	char seconds_box_text[3] = "";
 
-	const int font_size = 20;
-	const float font_spacing = 1.3;
-	Font font = LoadFont("extra/AkaashNormal.ttf");
-	
 	// char current_error[128] = "";
 	// here we say 9 because the format is hh:mm:ss and of course there is \0
 	char time_display[9];
@@ -567,28 +549,38 @@ int main() {
 
 	char* temp_alarm_file_path = NULL;
 	size_t path_size;
-	if (access(settings_file_path, F_OK) == 0) { // file exists
+	if (access(settings_file_path, F_OK) == 0) {
 		temp_alarm_file_path = get_alarm_path_from_settings(settings_file_path, &path_size);
 		
 		if (strcmp(temp_alarm_file_path, "") == 0) {
-			printf("ERROR: could not get alarm path from settings.\n");
-			CloseAudioDevice();
-			CloseWindow();
+			printf("ERROR: could not get alarm path from settings file. make sure that the file exists at '%s'\n", settings_file_path);
 			return 1;
 		}
-	} else { // file doesn't exist
-		printf("ERROR: settings file does not exist.\n");
-		CloseAudioDevice();
-		CloseWindow();
+	} else {
+		printf("ERROR: could not open settings file. make sure that the file exists at '%s'\n", settings_file_path);
 		return 1;
 	}
-	// char alarm_file_path[path_size];
-	char alarm_file_path[path_size+1];
+
+	char alarm_file_path[path_size];
 	strcpy(alarm_file_path, temp_alarm_file_path);
-	// alarm_file_path[path_size-1] = '\0';
-	alarm_file_path[path_size] = '\0';
 	free(temp_alarm_file_path);
 
+	if (access(alarm_file_path, F_OK) != 0) {
+		printf("ERROR: could not open the alarm file path inside settings file. make sure that the path inside the settings file at '%s' is valid.\n", settings_file_path);
+		return 1;
+	}
+
+	InitWindow(WIDTH, HEIGHT, "Glock");
+	InitAudioDevice();
+	SetTargetFPS(60);
+
+	GuiWindowFileDialogState file_dialog_state = InitGuiWindowFileDialog(GetWorkingDirectory());
+
+	const int font_size = 20;
+	const float font_spacing = 1.3;
+	Font font = LoadFont("extra/AkaashNormal.ttf");
+	
+	// Music alarm = LoadMusicStream(alarm_file_path);
 	Music alarm = LoadMusicStream(alarm_file_path);
 	SetMusicVolume(alarm, 0.1f);
 	PlayMusicStream(alarm);
@@ -599,7 +591,7 @@ int main() {
 				const char* file_path_to_load = TextFormat("%s" PATH_SEPERATOR "%s", file_dialog_state.dirPathText, file_dialog_state.fileNameText);
 				file_dialog_state.SelectFilePressed = false;
 				if (!set_new_alarm_path(settings_file_path, file_path_to_load)) {
-					printf("ERROR: settings_file_path: %s\n", settings_file_path);
+					printf("ERROR: could not open the settings file at '%s'\n", settings_file_path);
 					UnloadMusicStream(alarm);
 					CloseAudioDevice();
 					CloseWindow();
