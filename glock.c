@@ -434,81 +434,95 @@ char* get_alarm_path_from_settings(const char* settings_file_path, size_t* path_
 
 
 int main() {
-	const int height_offset = 250;
+	const int height_offset = 50;
 
-	Rectangle hours_box_bounds = {
-		WIDTH/2.0-35/2.0,
-		HEIGHT/2.0-200+height_offset,
-		100,
-		25,
-	};
-	Rectangle minutes_box_bounds = {
-		WIDTH/2.0-35/2.0,
-		HEIGHT/2.0-250+height_offset,
-		100,
-		25,
-	};
-	Rectangle seconds_box_bounds = {
-		WIDTH/2.0-35/2.0,
-		HEIGHT/2.0-300+height_offset,
-		100,
-		25,
-	};
-	Rectangle confirm_button_bounds = {
-		WIDTH/2.0-35/2.0,
-		HEIGHT/2.0-150+height_offset,
-		100,
-		25,
-	};
+	const int text_boxes_width = 100;
+	const int text_boxes_x = WIDTH/2.0-text_boxes_width/2.0;
+	const int widgets_height = 25;
+	const int distance_between_text_boxes = 20;
+	const int distance_between_button_and_text_box = 20; // 40
+	const int distance_between_text_box_and_button = 15;
+	const int distance_between_buttons = 5;
 
 	Rectangle one_minute_button_bounds = {
 		220,
-		50,
+		height_offset,
 		80,
-		25
+		widgets_height
 	};
 	Rectangle two_minute_button_bounds = {
 		220+80+10,
-		50,
+		height_offset,
 		80,
-		25
+		widgets_height
 	};
 	Rectangle three_minute_button_bounds = {
 		220+80+80+10+10,
-		50,
+		height_offset,
 		80,
-		25
+		widgets_height
 	};
 	Rectangle five_minute_button_bounds = {
 		220+80+80+80+10+10+10,
-		50,
+		height_offset,
 		80,
-		25
+		widgets_height
 	};
-
 	Rectangle ten_minute_button_bounds = {
 		220,
-		85,
+		height_offset+widgets_height+10,
 		80,
-		25
+		widgets_height
 	};
 	Rectangle fifteen_minute_button_bounds = {
 		220+80+10,
-		85,
+		height_offset+widgets_height+10,
 		80,
-		25
+		widgets_height
 	};
 	Rectangle thirty_minute_button_bounds = {
 		220+80+80+10+10,
-		85,
+		height_offset+widgets_height+10,
 		80,
-		25
+		widgets_height
 	};
-	Rectangle one_hour_minute_button_bounds = {
+	Rectangle one_hour_button_bounds = {
 		220+80+80+80+10+10+10,
-		85,
+		height_offset+widgets_height+10,
 		80,
-		25
+		widgets_height
+	};
+
+	Rectangle seconds_box_bounds = {
+		text_boxes_x,
+		one_hour_button_bounds.y+widgets_height+distance_between_button_and_text_box,
+		text_boxes_width,
+		widgets_height,
+	};
+	Rectangle minutes_box_bounds = {
+		text_boxes_x,
+		one_hour_button_bounds.y+widgets_height+distance_between_button_and_text_box+widgets_height*1+distance_between_text_boxes*1,
+		text_boxes_width,
+		widgets_height,
+	};
+	Rectangle hours_box_bounds = {
+		text_boxes_x,
+		one_hour_button_bounds.y+widgets_height+distance_between_button_and_text_box+widgets_height*2+distance_between_text_boxes*2,
+		text_boxes_width,
+		widgets_height,
+	};
+
+	Rectangle confirm_button_bounds = {
+		text_boxes_x,
+		hours_box_bounds.y+hours_box_bounds.height+distance_between_text_box_and_button,
+		text_boxes_width,
+		widgets_height
+	};
+	Rectangle clear_button_bounds = {
+		text_boxes_x,
+		hours_box_bounds.y+hours_box_bounds.height+distance_between_text_box_and_button+widgets_height+distance_between_buttons,
+		text_boxes_width,
+		widgets_height
 	};
 
 
@@ -576,11 +590,10 @@ int main() {
 
 	GuiWindowFileDialogState file_dialog_state = InitGuiWindowFileDialog(GetWorkingDirectory());
 
-	const int font_size = 20;
-	const float font_spacing = 1.3;
-	Font font = LoadFont("extra/AkaashNormal.ttf");
+	const int font_size = 15;
+	Font default_font = GetFontDefault();
+	const float font_spacing = 2;
 	
-	// Music alarm = LoadMusicStream(alarm_file_path);
 	Music alarm = LoadMusicStream(alarm_file_path);
 	SetMusicVolume(alarm, 0.1f);
 	PlayMusicStream(alarm);
@@ -631,9 +644,9 @@ int main() {
 		GuiTextBox2(minutes_box_bounds, minutes_box_text, 3, minutes_box_edit_mode);
 		GuiTextBox2(seconds_box_bounds, seconds_box_text, 3, seconds_box_edit_mode);
 
-		DrawTextEx(font, "Hour(s)", (Vector2){WIDTH/2.0-100/2.0-55,   HEIGHT/2.0-200+height_offset}, font_size, font_spacing, WHITE);
-		DrawTextEx(font, "Minute(s)", (Vector2){WIDTH/2.0-100/2.0-55, HEIGHT/2.0-250+height_offset}, font_size, font_spacing, WHITE);
-		DrawTextEx(font, "Second(s)", (Vector2){WIDTH/2.0-100/2.0-55, HEIGHT/2.0-300+height_offset}, font_size, font_spacing, WHITE);
+		DrawTextEx(default_font, "Second(s)", (Vector2){WIDTH/2.0-100/2.0-85, seconds_box_bounds.y+5}, font_size, font_spacing, WHITE);
+		DrawTextEx(default_font, "Minute(s)", (Vector2){WIDTH/2.0-100/2.0-85, minutes_box_bounds.y+5}, font_size, font_spacing, WHITE);
+		DrawTextEx(default_font, "Hour(s)", (Vector2){WIDTH/2.0-100/2.0-85, hours_box_bounds.y+5}, font_size, font_spacing, WHITE);
 
 		if (GuiButton(one_minute_button_bounds, "1m")) {
 			strcpy(minutes_box_text, "1");
@@ -670,12 +683,12 @@ int main() {
 			strcpy(seconds_box_text, "");
 			strcpy(hours_box_text, "");
 		}
-		if (GuiButton(one_hour_minute_button_bounds, "1h")) {
+		if (GuiButton(one_hour_button_bounds, "1h")) {
 			strcpy(hours_box_text, "1");
 			strcpy(seconds_box_text, "");
 			strcpy(minutes_box_text, "");
 		}
-		if (GuiButton((Rectangle){WIDTH/2.0-35/2.0, HEIGHT/2.0-150+height_offset+30, 100, 25}, "Clear")) {
+		if (GuiButton(clear_button_bounds, "Clear")) {
 			strcpy(seconds_box_text, "");
 			strcpy(minutes_box_text, "");
 			strcpy(hours_box_text, "");
@@ -714,7 +727,10 @@ int main() {
 			}
 		}
 
-		DrawText(time_display, WIDTH/2.0, HEIGHT-50, 20, WHITE);
+		int font_size = 20;
+		int font_length = MeasureText(time_display, font_size);
+		DrawText(time_display, WIDTH/2.0-font_length/2.0, HEIGHT-40, font_size, WHITE);
+		// DrawText(time_display, WIDTH/2.0, HEIGHT-40, font_size, WHITE);
 
 		if (file_dialog_state.windowActive) GuiLock();
 
