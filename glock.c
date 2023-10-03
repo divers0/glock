@@ -14,8 +14,8 @@
 #define GUI_WINDOW_FILE_DIALOG_IMPLEMENTATION
 #include "include/gui_window_file_dialog.h"
 
-#define WIDTH  800
-#define HEIGHT 400
+#define WIDTH  600
+#define HEIGHT 370
 
 typedef struct {
 	float hours;
@@ -444,52 +444,57 @@ int main() {
 	const int distance_between_text_box_and_button = 15;
 	const int distance_between_buttons = 5;
 
+	const int top_buttons_width = 80;
+	const int distance_between_top_buttons = 10;
+	const int top_buttons_offset = (WIDTH-((4*top_buttons_width)+(3*distance_between_top_buttons)))/2;
+
+
 	Rectangle one_minute_button_bounds = {
-		220,
+		top_buttons_offset,
 		height_offset,
-		80,
+		top_buttons_width,
 		widgets_height
 	};
 	Rectangle two_minute_button_bounds = {
-		220+80+10,
+		top_buttons_offset+top_buttons_width+distance_between_top_buttons,
 		height_offset,
-		80,
+		top_buttons_width,
 		widgets_height
 	};
 	Rectangle three_minute_button_bounds = {
-		220+80+80+10+10,
+		top_buttons_offset+top_buttons_width*2+distance_between_top_buttons*2,
 		height_offset,
-		80,
+		top_buttons_width,
 		widgets_height
 	};
 	Rectangle five_minute_button_bounds = {
-		220+80+80+80+10+10+10,
+		top_buttons_offset+top_buttons_width*3+distance_between_top_buttons*3,
 		height_offset,
-		80,
+		top_buttons_width,
 		widgets_height
 	};
 	Rectangle ten_minute_button_bounds = {
-		220,
-		height_offset+widgets_height+10,
-		80,
+		top_buttons_offset,
+		height_offset+widgets_height+distance_between_top_buttons,
+		top_buttons_width,
 		widgets_height
 	};
 	Rectangle fifteen_minute_button_bounds = {
-		220+80+10,
-		height_offset+widgets_height+10,
-		80,
+		top_buttons_offset+top_buttons_width+distance_between_top_buttons,
+		height_offset+widgets_height+distance_between_top_buttons,
+		top_buttons_width,
 		widgets_height
 	};
 	Rectangle thirty_minute_button_bounds = {
-		220+80+80+10+10,
-		height_offset+widgets_height+10,
-		80,
+		top_buttons_offset+top_buttons_width*2+distance_between_top_buttons*2,
+		height_offset+widgets_height+distance_between_top_buttons,
+		top_buttons_width,
 		widgets_height
 	};
 	Rectangle one_hour_button_bounds = {
-		220+80+80+80+10+10+10,
-		height_offset+widgets_height+10,
-		80,
+		top_buttons_offset+top_buttons_width*3+distance_between_top_buttons*3,
+		height_offset+widgets_height+distance_between_top_buttons,
+		top_buttons_width,
 		widgets_height
 	};
 
@@ -590,13 +595,14 @@ int main() {
 
 	GuiWindowFileDialogState file_dialog_state = InitGuiWindowFileDialog(GetWorkingDirectory());
 
-	const int font_size = 15;
-	Font default_font = GetFontDefault();
-	const float font_spacing = 2;
+	const int font_size = 17;
 	
+	const int time_display_font_size = 20;
+
 	Music alarm = LoadMusicStream(alarm_file_path);
 	SetMusicVolume(alarm, 0.1f);
 	PlayMusicStream(alarm);
+
 
 	while (!WindowShouldClose()) {
 		if (file_dialog_state.SelectFilePressed) {
@@ -644,9 +650,9 @@ int main() {
 		GuiTextBox2(minutes_box_bounds, minutes_box_text, 3, minutes_box_edit_mode);
 		GuiTextBox2(seconds_box_bounds, seconds_box_text, 3, seconds_box_edit_mode);
 
-		DrawTextEx(default_font, "Second(s)", (Vector2){WIDTH/2.0-100/2.0-85, seconds_box_bounds.y+5}, font_size, font_spacing, WHITE);
-		DrawTextEx(default_font, "Minute(s)", (Vector2){WIDTH/2.0-100/2.0-85, minutes_box_bounds.y+5}, font_size, font_spacing, WHITE);
-		DrawTextEx(default_font, "Hour(s)", (Vector2){WIDTH/2.0-100/2.0-85, hours_box_bounds.y+5}, font_size, font_spacing, WHITE);
+		DrawText("Second(s)", WIDTH/2.0-seconds_box_bounds.width-35, seconds_box_bounds.y+5, font_size, WHITE);
+		DrawText("Minute(s)", WIDTH/2.0-minutes_box_bounds.width-35, minutes_box_bounds.y+5, font_size, WHITE);
+		DrawText("Hour(s)", WIDTH/2.0-hours_box_bounds.width-35, hours_box_bounds.y+5, font_size, WHITE);
 
 		if (GuiButton(one_minute_button_bounds, "1m")) {
 			strcpy(minutes_box_text, "1");
@@ -727,10 +733,7 @@ int main() {
 			}
 		}
 
-		int font_size = 20;
-		int font_length = MeasureText(time_display, font_size);
-		DrawText(time_display, WIDTH/2.0-font_length/2.0, HEIGHT-40, font_size, WHITE);
-		// DrawText(time_display, WIDTH/2.0, HEIGHT-40, font_size, WHITE);
+		DrawText(time_display, WIDTH/2.0-MeasureText(time_display, time_display_font_size)/2.0, HEIGHT-40, time_display_font_size, WHITE);
 
 		if (file_dialog_state.windowActive) GuiLock();
 
